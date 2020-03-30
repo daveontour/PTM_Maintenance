@@ -1,0 +1,25 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.29409.12
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AUH PTM Widget", "AUH PTM Widget.csproj", "{0AA10018-B5ED-4246-8A38-A191EC969083}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{0AA10018-B5ED-4246-8A38-A191EC969083}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0AA10018-B5ED-4246-8A38-A191EC969083}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0AA10018-B5ED-4246-8A38-A191EC969083}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0AA10018-B5ED-4246-8A38-A191EC969083}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {6A3ECD3C-140A-405E-ABF9-055B3175AEE5}
+	EndGlobalSection
+EndGlobal
