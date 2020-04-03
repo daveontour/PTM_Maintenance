@@ -8,15 +8,31 @@ namespace AUH_PTM_Widget
     {
 
         static readonly NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();
-
-
         public ArrivalChangeClassifier() { }
 
         public Tuple<bool, FlightNode, XmlNode> Classify(XmlNode xmlRoot)
         {
+
+            /*
+             * Takes a FlightUpdated Notification messages and determines if there are any changes to the
+             * Tl--TransferLoads table
+             */
+
             XmlNamespaceManager nsmgr = new XmlNamespaceManager(xmlRoot.OwnerDocument.NameTable);
             nsmgr.AddNamespace("ams", "http://www.sita.aero/ams6-xml-api-datatypes");
             nsmgr.AddNamespace("amsmess", "http://www.sita.aero/ams6-xml-api-messages");
+
+
+            // Firstly, we are only interested in Arrival Flight Changes.
+            FlightNode flight = new FlightNode(xmlRoot, nsmgr);
+
+            // The Flight is not an arrival, so stop processing
+            if (!flight.IsArrival())
+            {
+                logger.Trace("Flight was not an arrival");
+                return new Tuple<bool, FlightNode, XmlNode>(false, flight, null);
+            }
+
 
             XmlNode transferChanges;
 
@@ -37,15 +53,6 @@ namespace AUH_PTM_Widget
                 return new Tuple<bool, FlightNode, XmlNode>(false, null, null);
             }
 
-            FlightNode flight = new FlightNode(xmlRoot, nsmgr);
-
-            // The Flight is not an arrival, so stop processing
-            if (!flight.IsArrival())
-            {
-                logger.Trace("Flight was not an arrival");
-                return new Tuple<bool, FlightNode, XmlNode>(false, flight, null);
-            }
-
             logger.Trace("Arrival flight with transfer changes " + flight.ToString());
 
             return new Tuple<bool, FlightNode, XmlNode>(true, flight, transferChanges);
@@ -53,10 +60,15 @@ namespace AUH_PTM_Widget
 
         internal Tuple<List<PTMRow>, List<PTMRow>, List<PTMRow>> ClassifyEntries(XmlNode transferChanges)
         {
+            /* 
+             * Determine the entries which are additions, updates and deletions
+             */
+
             XmlNamespaceManager nsmgr = new XmlNamespaceManager(transferChanges.OwnerDocument.NameTable);
             nsmgr.AddNamespace("ams", "http://www.sita.aero/ams6-xml-api-datatypes");
             nsmgr.AddNamespace("amsmess", "http://www.sita.aero/ams6-xml-api-messages");
 
+            // Tne XML node containing the old entries
             XmlNode oldNode;
 
             try
@@ -69,6 +81,7 @@ namespace AUH_PTM_Widget
                 return null;
             }
 
+            // The XML node containing the new entries
             XmlNode newNode;
 
             try
@@ -81,61 +94,67 @@ namespace AUH_PTM_Widget
                 return null;
             }
 
+            //Create a list of the Old entries
             List<PTMRow> oldList = new List<PTMRow>();
-            List<PTMRow> newList = new List<PTMRow>();
-
             try
             {
 
-                logger.Trace("Old Values:");
                 foreach (XmlNode row in oldNode.SelectNodes(".//ams:Row", nsmgr))
                 {
-                    PTMRow ptmRow = new PTMRow(row, nsmgr);
-                    logger.Trace(ptmRow.ToString);
+                    PTMRow ptmRow = new PTMRow(row);
+                    if (Parameters.DEEPTRACE) logger.Trace($"Old Values Entry {ptmRow.ToString()}");
                     oldList.Add(ptmRow);
                 }
             }
             catch (Exception e)
             {
                 logger.Trace(e.Message);
+                return null;
             }
 
+            // Create a list of the new entries
+            List<PTMRow> newList = new List<PTMRow>();
             try
             {
-                logger.Trace("New Values:");
+
                 foreach (XmlNode row in newNode.SelectNodes(".//ams:Row", nsmgr))
                 {
-                    PTMRow ptmRow = new PTMRow(row, nsmgr);
-                    logger.Trace(ptmRow.ToString);
+                    PTMRow ptmRow = new PTMRow(row);
+                    if (Parameters.DEEPTRACE) logger.Trace($"New Values Entry {ptmRow.ToString()}");
                     newList.Add(ptmRow);
                 }
             }
             catch (Exception e)
             {
                 logger.Trace(e.Message);
+                return null;
             }
 
+            // Examine the list to create a new list of the adds, updates and deletes
             List<PTMRow> additionsList = GetAdditions(oldList, newList);
             List<PTMRow> updateList = GetChanges(oldList, newList);
             List<PTMRow> deleteList = GetDeletions(oldList, newList);
 
-
-            logger.Trace("Addition List:");
-            foreach (PTMRow row in additionsList)
+            //Print out the individual lists of logging is enabled.
+            if (logger.IsTraceEnabled)
             {
-                logger.Trace(row.ToString);
-            }
+                logger.Trace("Addition List:");
+                foreach (PTMRow row in additionsList)
+                {
+                    logger.Trace(row.ToString);
+                }
 
-            logger.Trace("Updates List:");
-            foreach (PTMRow row in updateList)
-            {
-                logger.Trace(row.ToString);
-            }
+                logger.Trace("Updates List:");
+                foreach (PTMRow row in updateList)
+                {
+                    logger.Trace(row.ToString);
+                }
 
-            logger.Trace("Delete List:");
-            foreach (PTMRow row in deleteList)
-            {
-                logger.Trace(row.ToString);
+                logger.Trace("Delete List:");
+                foreach (PTMRow row in deleteList)
+                {
+                    logger.Trace(row.ToString);
+                }
             }
 
 
@@ -145,6 +164,7 @@ namespace AUH_PTM_Widget
 
         private List<PTMRow> GetAdditions(List<PTMRow> oldList, List<PTMRow> newList)
         {
+            // Lis to hold the new entries
             List<PTMRow> additionsList = new List<PTMRow>();
 
             foreach (PTMRow newPTM in newList)
@@ -159,6 +179,7 @@ namespace AUH_PTM_Widget
                     }
                 }
 
+                //The entry wasn't found in the oldlist, so it is an addtion. Add it to the list
                 if (!found)
                 {
                     additionsList.Add(newPTM);
@@ -177,6 +198,7 @@ namespace AUH_PTM_Widget
                 bool change = false;
                 foreach (PTMRow oldPTM in oldList)
                 {
+                    // if the flight is the same, but the contents have changed, then add it to the changes list
                     if (oldPTM.FlightEquals(newPTM) & !oldPTM.PTMEquals(newPTM))
                     {
                         change = true;
@@ -209,6 +231,7 @@ namespace AUH_PTM_Widget
                     }
                 }
 
+                // An old entry wasn't found in the set of new entries, so it has to be removed. Add it to the delete list
                 if (!found)
                 {
                     deleteList.Add(oldPTM);

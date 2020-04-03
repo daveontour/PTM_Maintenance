@@ -12,6 +12,7 @@ namespace AUH_PTM_Widget
         // Primarily skeleton code for defining the ConsoleApp/Service to be managed by TopShelf
         static void Main(string[] args)
         {
+
             var exitCode = HostFactory.Run(x =>
             {
                 /*

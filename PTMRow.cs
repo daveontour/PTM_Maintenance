@@ -19,14 +19,18 @@ namespace AUH_PTM_Widget
         public string sto;
 
 
-        public PTMRow(XmlNode node, XmlNamespaceManager nsmgr)
+        public PTMRow(XmlNode node)
         {
+            XmlNamespaceManager nsmgr = new XmlNamespaceManager(node.OwnerDocument.NameTable);
+            nsmgr.AddNamespace("ams", "http://www.sita.aero/ams6-xml-api-datatypes");
+            nsmgr.AddNamespace("amsmess", "http://www.sita.aero/ams6-xml-api-messages");
 
             airline = node.SelectSingleNode(".//ams:Value[@propertyName='Sl--_AirlineIATA']", nsmgr).InnerText;
             flight = node.SelectSingleNode(".//ams:Value[@propertyName='Sl--_FlightNumber']", nsmgr).InnerText;
             sto = node.SelectSingleNode(".//ams:Value[@propertyName='dl--_STO']", nsmgr).InnerText;
             flightKey = airline + flight + sto.Substring(0, 10);
 
+            //Create a dictionary of values from the PTM record
             XmlNodeList values = node.SelectNodes(".//ams:Value", nsmgr);
             foreach (XmlNode value in values)
             {
@@ -63,6 +67,8 @@ namespace AUH_PTM_Widget
                         return false;
                     }
                 }
+
+                // Just in case a new element has been added to the record
                 foreach (string key in node.valueMap.Keys)
                 {
                     if (node.valueMap[key] != valueMap[key])

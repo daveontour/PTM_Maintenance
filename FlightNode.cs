@@ -100,7 +100,7 @@ namespace AUH_PTM_Widget
                 logger.Trace("ICAO Airport Not Found");
             }
 
-            this.flightKey = this.airlineDesignatorIATA + this.flightNumber + this.scheduledDate;
+            this.flightKey = this.airlineDesignatorIATA + this.flightNumber + this.scheduledDate.Substring(0, 10);
         }
 
         public bool IsArrival()
