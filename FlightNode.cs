@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Xml;
 
-//Release Candidate 1.0
+//Release Candidate 2.0
 
 namespace Departure_PTM_Widget
 {

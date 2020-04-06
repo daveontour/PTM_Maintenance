@@ -7,7 +7,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Xml;
 
-//Release Candidate 1.0
+//Release Candidate 2.0
 
 namespace Departure_PTM_Widget
 {
@@ -54,6 +54,7 @@ namespace Departure_PTM_Widget
         {
             logger.Info("Departure PTM Service Stopping");
             startListenLoop = false;
+            FlightUpdater.OK_TO_RUN = false;
             logger.Info("Departure PTM Service Stopped");
         }
 

@@ -2,50 +2,23 @@
 using System.Collections.Generic;
 using System.Net;
 using System.Net.Http;
+using System.Runtime.Caching;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Xml;
 
-//Release Candidate 1.0
+//Release Candidate 2.0
 
 namespace Departure_PTM_Widget
 {
     class FlightUpdater
     {
-        private readonly NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();
+        protected readonly List<Tuple<FlightNode, FlightNode, PTMRow>> _dispatcherList = new List<Tuple<FlightNode, FlightNode, PTMRow>>();
+        protected readonly MemoryCache _RecentProcessed = new MemoryCache("RecentProcessed");
+        private Thread dispatcherThread;
 
-        //        private readonly string getFlightTemplate = @"<soapenv:Envelope xmlns:soapenv=""http://schemas.xmlsoap.org/soap/envelope/"" xmlns:ams6=""http://www.sita.aero/ams6-xml-api-webservice"" xmlns:wor=""http://schemas.datacontract.org/2004/07/WorkBridge.Modules.AMS.AMSIntegrationAPI.Mod.Intf.DataTypes"">
-        //   <soapenv:Header/>
-        //   <soapenv:Body>
-        //	  <ams6:GetFlight>
-        //		 <!--Optional:-->
-        //		 <ams6:sessionToken>@token</ams6:sessionToken>
-        //		 <!--Optional:-->
-        //		 <ams6:flightId>
-        //			<wor:_hasAirportCodes>false</wor:_hasAirportCodes>
-        //			<wor:_hasFlightDesignator>true</wor:_hasFlightDesignator>
-        //			<wor:_hasScheduledTime>false</wor:_hasScheduledTime>
-        //			<wor:airlineDesignatorField>
-        //			   <!--Zero or more repetitions:-->
-        //			   <wor:LookupCode>
-        //				  <wor:codeContextField>IATA</wor:codeContextField>
-        //				  <wor:valueField>@airlineIATA</wor:valueField>
-        //			   </wor:LookupCode>
-        //			</wor:airlineDesignatorField>
-        //			<wor:airportCodeField>
-        //			   <!--Zero or more repetitions:-->
-        //			   <wor:LookupCode>
-        //				  <wor:codeContextField>IATA</wor:codeContextField>
-        //				  <wor:valueField>@airportIATA</wor:valueField>
-        //			   </wor:LookupCode>
-        //			</wor:airportCodeField>
-        //			<wor:flightKindField>@kind</wor:flightKindField>
-        //			<wor:flightNumberField>@flightNum</wor:flightNumberField>
-        //			<wor:scheduledDateField>@schedDate</wor:scheduledDateField>
-        //		 </ams6:flightId>
-        //	  </ams6:GetFlight>
-        //   </soapenv:Body>
-        //</soapenv:Envelope>";
+        private readonly NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();
 
         private readonly string getFlightTemplate = @"<soapenv:Envelope xmlns:soapenv=""http://schemas.xmlsoap.org/soap/envelope/"" xmlns:ams6=""http://www.sita.aero/ams6-xml-api-webservice"" xmlns:wor=""http://schemas.datacontract.org/2004/07/WorkBridge.Modules.AMS.AMSIntegrationAPI.Mod.Intf.DataTypes"">
    <soapenv:Header/>
@@ -79,53 +52,6 @@ namespace Departure_PTM_Widget
 	  </ams6:GetFlight>
    </soapenv:Body>
 </soapenv:Envelope>";
-
-        //     private readonly string updateFlightExtendedTop = @"<soapenv:Envelope xmlns:soapenv=""http://schemas.xmlsoap.org/soap/envelope/"" xmlns:ams6=""http://www.sita.aero/ams6-xml-api-webservice"" xmlns:wor=""http://schemas.datacontract.org/2004/07/WorkBridge.Modules.AMS.AMSIntegrationAPI.Mod.Intf.DataTypes"">
-        //<soapenv:Header/>
-        //<soapenv:Body>
-        //<ams6:UpdateFlightExtended>
-        //<!--Optional:-->
-        //<ams6:sessionToken>@token</ams6:sessionToken>
-        //<!--Optional:-->
-        //<ams6:flightIdentifier>
-        //<wor:_hasAirportCodes>true</wor:_hasAirportCodes>
-        //<wor:_hasFlightDesignator>true</wor:_hasFlightDesignator>
-        //<wor:_hasScheduledTime>true</wor:_hasScheduledTime>
-        //<wor:airlineDesignatorField>
-        //   <!--Zero or more repetitions:-->
-        //   <wor:LookupCode>
-        //	  <wor:codeContextField>IATA</wor:codeContextField>
-        //	  <wor:valueField>@iataAirline</wor:valueField>
-        //   </wor:LookupCode>
-        //   <wor:LookupCode>
-        //	  <wor:codeContextField>ICAO</wor:codeContextField>
-        //	  <wor:valueField>@icaoAirline</wor:valueField>
-        //   </wor:LookupCode>
-        //</wor:airlineDesignatorField>
-        //<wor:airportCodeField>
-        //   <!--Zero or more repetitions:-->
-        //   <wor:LookupCode>
-        //	  <wor:codeContextField>IATA</wor:codeContextField>
-        //	  <wor:valueField>@iataAirport</wor:valueField>
-        //   </wor:LookupCode>
-        //   <wor:LookupCode>
-        //	  <wor:codeContextField>ICAO</wor:codeContextField>
-        //	  <wor:valueField>@icaoAirport</wor:valueField>
-        //   </wor:LookupCode>
-        //</wor:airportCodeField>
-        //<wor:flightKindField>Departure</wor:flightKindField>
-        //<wor:flightNumberField>@fltNum</wor:flightNumberField>
-        //<wor:scheduledDateField>@sto</wor:scheduledDateField>
-        //</ams6:flightIdentifier>
-        //<!--Optional:-->
-        //<ams6:updates>
-        //<wor:activityUpdateField/>
-        // <wor:eventUpdateField/>
-        //<wor:tableValueUpdateField>
-        //   <!--Zero or more repetitions:-->
-        //   <wor:TableValueUpdate>
-        //	  <wor:propertyNameField>Tl--_TransferLoads</wor:propertyNameField>
-        //	  <wor:rowField>";
 
         private readonly string updateFlightExtendedTop = @"<soapenv:Envelope xmlns:soapenv=""http://schemas.xmlsoap.org/soap/envelope/"" xmlns:ams6=""http://www.sita.aero/ams6-xml-api-webservice"" xmlns:wor=""http://schemas.datacontract.org/2004/07/WorkBridge.Modules.AMS.AMSIntegrationAPI.Mod.Intf.DataTypes"">
    <soapenv:Header/>
@@ -191,9 +117,140 @@ namespace Departure_PTM_Widget
    </soapenv:Body>
 </soapenv:Envelope>";
 
-        public FlightUpdater() { }
+        public static bool OK_TO_RUN = false;
+        public FlightUpdater()
+        {
+            OK_TO_RUN = true;
+            dispatcherThread = new Thread(new ThreadStart(Dispatcher));
+            dispatcherThread.Start();
+        }
 
+        public void Dispatcher()
+        {
+            int nextSleep = Parameters.DISPATCHER_LOOP_INTERVAL;
+
+            while (OK_TO_RUN)
+            {
+                Thread.Sleep(nextSleep);
+                Tuple<FlightNode, FlightNode, PTMRow> processed = null;
+
+
+
+                // Check each of the items in the dispatcher list to see if they are ready for processing
+                if (_dispatcherList.Count > 0)
+                {
+                    logger.Trace($"Dispatcher Loop - {_dispatcherList.Count} jobs queued");
+                    foreach (Tuple<FlightNode, FlightNode, PTMRow> job in _dispatcherList)
+                    {
+                        if (this._RecentProcessed.Contains(job.Item2.flightKey))
+                        {
+                            // The flight key is still in the memory cache, so it's not ready for processing
+                            continue;
+                        }
+                        else
+                        {
+                            logger.Trace("Dispatching");
+                            // Put the flightkey in the RecentProcessed Cache so we don't try to update the same flight withing the minimum time
+                            this._RecentProcessed.Add(job.Item2.flightKey, DateTime.Now.AddSeconds(Parameters.MIN_SEPERATION), DateTime.Now.AddSeconds(Parameters.MIN_SEPERATION));
+
+                            _ = DispatchUpdateToDepartureFlight(job.Item1, job.Item2, job.Item3);
+                            processed = job;
+                            break;
+                        }
+                    }
+                }
+                else
+                {
+                    logger.Trace($"Dispatcher Loop - 0 jobs queued");
+                    nextSleep = Parameters.DISPATCHER_LOOP_INTERVAL;
+                }
+
+                if (processed != null)
+                {
+                    _dispatcherList.Remove(processed);
+                    nextSleep = 0;
+                }
+                else
+                {
+                    nextSleep = Parameters.DISPATCHER_LOOP_INTERVAL;
+                }
+            }
+
+            logger.Info("Dispatcher Stopped");
+
+        }
         public async Task<bool> UpdateOrAddOrRemovePTMFromDepartureFlight(FlightNode arrFlight, FlightNode depFlight, PTMRow updateOrAddPTM = null)
+        {
+            // arrFlight - the flight node for the arriving flight
+            // ptm - the PTM record that has to be removed from a departure flight
+
+            //XmlNode depFlightNode = await this.GetFlight(depFlight);
+
+            //if (depFlightNode == null || depFlightNode.OuterXml.Contains("FLIGHT_NOT_FOUND"))
+            //{
+            //    logger.Trace($"Departure Flight Not Found: {depFlight.flightKey }");
+            //    return false;
+            //}
+            //else
+            //{
+            //    logger.Trace($"Departure Flight Found: {depFlight.flightKey }");
+            //}
+
+            //XmlNode departurePTMSNodes = GetTransfersFromFlight(depFlightNode);
+
+            //if (departurePTMSNodes == null)
+            //{
+            //    logger.Trace($"No PTM Entries were found in departure flight: {depFlight.flightKey }");
+
+            //    //If this was only a delete, then we can return now
+            //    if (updateOrAddPTM == null)
+            //    {
+            //        return true;
+            //    }
+            //}
+
+            //// A list for holding the PTMs we want to retain
+            //List<XmlNode> retainedPTMs = new List<XmlNode>();
+
+            //if (departurePTMSNodes != null)
+            //{
+            //    foreach (XmlNode node in departurePTMSNodes)
+            //    {
+            //        PTMRow departurePTMEntry = new PTMRow(node);
+
+            //        // If the flight keys are the same, then don't add it to the list. For Updates and Addtions 
+            //        // the updatePTM will be passed along the chain so it is added 
+
+            //        if (arrFlight.flightKey != departurePTMEntry.flightKey)
+            //        {
+            //            retainedPTMs.Add(node);
+            //        }
+            //    }
+            //}
+
+            //// The updatePTM has the departure flight information in it, so We need to modify it so it has the arrival flight information in it 
+            //if (updateOrAddPTM != null)
+            //{
+            //    updateOrAddPTM.valueMap["Sl--_AirlineIATA"] = arrFlight.airlineDesignatorIATA;
+            //    updateOrAddPTM.valueMap["Sl--_FlightNumber"] = arrFlight.flightNumber;
+            //    if (Parameters.STO_DATETIME)
+            //    {
+            //        updateOrAddPTM.valueMap["dl--_STO"] = arrFlight.scheduledDate + "T00:00:00";
+            //    }
+            //    else
+            //    {
+            //        updateOrAddPTM.valueMap["dl--_STO"] = arrFlight.scheduledDate;
+            //    }
+            //}
+
+            _dispatcherList.Add(new Tuple<FlightNode, FlightNode, PTMRow>(arrFlight, depFlight, updateOrAddPTM));
+
+            // _ = UpdateDeprtaureFlightPTMEntriesAsync(retainedPTMs, depFlight, updateOrAddPTM);
+
+            return true;
+        }
+
+        public async Task<bool> DispatchUpdateToDepartureFlight(FlightNode arrFlight, FlightNode depFlight, PTMRow updateOrAddPTM = null)
         {
             // arrFlight - the flight node for the arriving flight
             // ptm - the PTM record that has to be removed from a departure flight
@@ -286,6 +343,7 @@ namespace Departure_PTM_Widget
                         {
                             logger.Trace($"Update of departure Flight Succeeded OK. Departure Flight {depFlight.flightKey} ");
                             _ = ProcessResponse(response);
+
                             return;
                         }
                         else
@@ -298,6 +356,7 @@ namespace Departure_PTM_Widget
                             }
                             return;
                         }
+
                     }
                 }
             }

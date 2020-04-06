@@ -24,7 +24,10 @@ namespace Departure_PTM_Widget
         internal static string HOME_AIRPORT_IATA;
 
         internal static int LISTENQUEUE_RETRY_INTERVAL;
-        internal static string VERSION = "Version 1.0, 20200404";
+        internal static int MIN_SEPERATION = 10;
+        internal static int DISPATCHER_LOOP_INTERVAL = 1000;
+
+        internal static string VERSION = "Version RC 1.0, 20200404";
         internal static bool DEEPTRACE;
 
         internal static bool PROCESS_ADDS;
@@ -44,6 +47,11 @@ namespace Departure_PTM_Widget
                 RECVQ = (string)ConfigurationManager.AppSettings["NotificationQueue"];
                 LISTENQUEUE_RETRY_INTERVAL = Int32.Parse((string)ConfigurationManager.AppSettings["ResetServerRetryInterval"]);
                 WAIT_FOR_MESSAGE_INTERVAL = Int32.Parse((string)ConfigurationManager.AppSettings["WaitForMessageInterval"]);
+
+                MIN_SEPERATION = Int32.Parse((string)ConfigurationManager.AppSettings["MIN_SEPERATION"]);
+
+                DISPATCHER_LOOP_INTERVAL = Int32.Parse((string)ConfigurationManager.AppSettings["DISPATCHER_LOOP_INTERVAL"]);
+
                 try
                 {
                     DEEPTRACE = bool.Parse((string)ConfigurationManager.AppSettings["DeepTrace"]);
