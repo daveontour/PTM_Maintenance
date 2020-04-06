@@ -3,7 +3,7 @@ using System.Configuration;
 
 //Version RC 1.0
 
-namespace AUH_PTM_Widget
+namespace Departure_PTM_Widget
 {
 
     /*
@@ -13,31 +13,37 @@ namespace AUH_PTM_Widget
      * 
      * 
      */
-    public class Parameters
+    internal class Parameters
     {
 
-        static readonly NLog.Logger Logger = NLog.LogManager.GetCurrentClassLogger();
+        static readonly NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();
 
-        public static string TOKEN;
-        public static string BASE_URI;
-        public static string RECVQ;
+        internal static string TOKEN;
+        internal static string BASE_URI;
+        internal static string RECVQ;
+        internal static string HOME_AIRPORT_IATA;
 
-        public static int RESTSERVER_RETRY_INTERVAL;
-        public static string VERSION = "Version 1.0, 20200323";
-        public static bool DEEPTRACE;
+        internal static int LISTENQUEUE_RETRY_INTERVAL;
+        internal static string VERSION = "Version 1.0, 20200404";
+        internal static bool DEEPTRACE;
 
-        public static bool PROCESS_ADDS;
-        public static bool PROCESS_UPDATES;
-        public static bool PROCESS_DELETES;
+        internal static bool PROCESS_ADDS;
+        internal static bool PROCESS_UPDATES;
+        internal static bool PROCESS_DELETES;
+        internal static bool STO_DATETIME;
+
+        internal static int WAIT_FOR_MESSAGE_INTERVAL;
 
         static Parameters()
         {
             try
             {
                 TOKEN = (string)ConfigurationManager.AppSettings["Token"];
+                HOME_AIRPORT_IATA = (string)ConfigurationManager.AppSettings["HOME_AIRPORT_IATA"];
                 BASE_URI = (string)ConfigurationManager.AppSettings["BaseURI"];
                 RECVQ = (string)ConfigurationManager.AppSettings["NotificationQueue"];
-                RESTSERVER_RETRY_INTERVAL = Int32.Parse((string)ConfigurationManager.AppSettings["ResetServerRetryInterval"]);
+                LISTENQUEUE_RETRY_INTERVAL = Int32.Parse((string)ConfigurationManager.AppSettings["ResetServerRetryInterval"]);
+                WAIT_FOR_MESSAGE_INTERVAL = Int32.Parse((string)ConfigurationManager.AppSettings["WaitForMessageInterval"]);
                 try
                 {
                     DEEPTRACE = bool.Parse((string)ConfigurationManager.AppSettings["DeepTrace"]);
@@ -73,10 +79,18 @@ namespace AUH_PTM_Widget
                 {
                     PROCESS_DELETES = false;
                 }
+                try
+                {
+                    STO_DATETIME = bool.Parse((string)ConfigurationManager.AppSettings["STO_DATETIMES"]);
+                }
+                catch (Exception)
+                {
+                    STO_DATETIME = true;
+                }
             }
             catch (Exception ex)
             {
-                Logger.Error(ex.Message);
+                logger.Error(ex.Message);
             }
         }
     }

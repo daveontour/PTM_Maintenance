@@ -1,17 +1,29 @@
 ﻿using System;
 using System.Collections.Specialized;
 using System.Configuration;
+using System.Messaging;
 using Topshelf;
 
-namespace AUH_PTM_Widget
+namespace Departure_PTM_Widget
 {
     class Program
     {
-        private static readonly NLog.Logger Logger = NLog.LogManager.GetCurrentClassLogger();
 
         // Primarily skeleton code for defining the ConsoleApp/Service to be managed by TopShelf
-        static void Main(string[] args)
+        static void Main()
         {
+            if (!MessageQueue.Exists(Parameters.RECVQ))
+            {
+                Console.WriteLine("======================================");
+                Console.WriteLine("= Departure Flight PTM Updater Error ");
+                Console.WriteLine($"= The configured notification queue, {Parameters.RECVQ}, does not exist");
+                Console.WriteLine("=");
+                Console.WriteLine("= Service Not Started ");
+                Console.WriteLine("======================================");
+
+                Environment.ExitCode = -1;
+                return;
+            }
 
             var exitCode = HostFactory.Run(x =>
             {

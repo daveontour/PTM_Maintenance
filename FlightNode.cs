@@ -1,12 +1,10 @@
 ﻿using System;
 using System.Xml;
 
-//Version RC 3.7
 
-namespace AUH_PTM_Widget
+namespace Departure_PTM_Widget
 {
 
-    // Class for holding the flight information that is contained in the Towing message
     class FlightNode
     {
         public string flightKind;
@@ -21,17 +19,17 @@ namespace AUH_PTM_Widget
 
         public string flightKey;
 
-        private static readonly NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();
+        private readonly NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();
 
         public FlightNode(PTMRow flight, string kind, string airport)
         {
-            this.flightKind = kind;
-            this.airlineDesignatorIATA = flight.airline;
-            this.scheduledDate = flight.sto;
-            this.flightNumber = flight.flight;
-            this.airportCodeIATA = airport;
+            flightKind = kind;
+            airlineDesignatorIATA = flight.airline;
+            scheduledDate = flight.sto;
+            flightNumber = flight.flight;
+            airportCodeIATA = airport;
 
-            this.flightKey = this.airlineDesignatorIATA + this.flightNumber + this.scheduledDate.Substring(0, 10);
+            flightKey = airlineDesignatorIATA + flightNumber + scheduledDate.Substring(0, 10);
         }
         public FlightNode(XmlNode node, XmlNamespaceManager nsmgr)
         {
@@ -43,7 +41,7 @@ namespace AUH_PTM_Widget
             }
             catch (Exception)
             {
-                logger.Trace("FlightKind Not Found");
+                logger.Error("FlightKind Not Found");
             }
 
             try
@@ -52,7 +50,7 @@ namespace AUH_PTM_Widget
             }
             catch (Exception)
             {
-                logger.Trace("IATA Airline Not Found");
+                logger.Error("IATA Airline Not Found");
             }
 
             try
@@ -61,7 +59,7 @@ namespace AUH_PTM_Widget
             }
             catch (Exception)
             {
-                logger.Trace("ICAO Airline Not Found");
+                logger.Error("ICAO Airline Not Found");
             }
 
             try
@@ -70,7 +68,7 @@ namespace AUH_PTM_Widget
             }
             catch (Exception)
             {
-                logger.Trace("Flight Number Not Found");
+                logger.Error("Flight Number Not Found");
             }
 
             try
@@ -79,7 +77,7 @@ namespace AUH_PTM_Widget
             }
             catch (Exception)
             {
-                logger.Trace("Sched Date Not Found");
+                logger.Error("Sched Date Not Found");
             }
 
             try
@@ -88,7 +86,7 @@ namespace AUH_PTM_Widget
             }
             catch (Exception)
             {
-                logger.Trace("IATA Airport Not Found");
+                logger.Error("IATA Airport Not Found");
             }
 
             try
@@ -97,7 +95,7 @@ namespace AUH_PTM_Widget
             }
             catch (Exception)
             {
-                logger.Trace("ICAO Airport Not Found");
+                logger.Error("ICAO Airport Not Found");
             }
 
             this.flightKey = this.airlineDesignatorIATA + this.flightNumber + this.scheduledDate.Substring(0, 10);

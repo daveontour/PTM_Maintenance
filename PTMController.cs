@@ -7,22 +7,21 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Xml;
 
-namespace AUH_PTM_Widget
+namespace Departure_PTM_Widget
 {
-    class PTMController
+    class PTMController : IDisposable
     {
-        static readonly NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();
+        private readonly NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();
 
-        private static MessageQueue recvQueue;  // Queue to recieve update notifications on
+        private MessageQueue recvQueue;  // Queue to recieve update notifications on
         private bool startListenLoop = true;    // Flag controlling the execution of the update notificaiton listener
 
-        public bool stopProcessing = false;
-        public Thread startThread;
+        private Thread startThread;
         private Thread receiveThread;           // Thread the notification listener runs in 
-        private readonly static Random random = new Random();
+        private readonly Random random = new Random();
 
-        private ArrivalChangeClassifier arrivalClassifier = new ArrivalChangeClassifier();
-        private FlightUpdater flightUpdater = new FlightUpdater();
+        private readonly ArrivalChangeClassifier arrivalClassifier = new ArrivalChangeClassifier();
+        private readonly FlightUpdater flightUpdater = new FlightUpdater();
 
         public PTMController() { }
 
@@ -32,7 +31,13 @@ namespace AUH_PTM_Widget
         public bool Start()
         {
             logger.Info($"Departure PTM Service Starting ({Parameters.VERSION})");
-            stopProcessing = false;
+
+            if (!MessageQueue.Exists(Parameters.RECVQ))
+            {
+                logger.Warn($"The configured notification queue, {Parameters.RECVQ}, does not exist");
+                return false;
+            }
+
             startThread = new Thread(new ThreadStart(StartThread));
             startThread.Start();
             logger.Info($"Departure PTM Service Started ({Parameters.VERSION})");
@@ -46,12 +51,11 @@ namespace AUH_PTM_Widget
         public void Stop()
         {
             logger.Info("Departure PTM Service Stopping");
-            stopProcessing = true;
             startListenLoop = false;
             logger.Info("Departure PTM Service Stopped");
         }
 
-        public void StartThread()
+        private void StartThread()
         {
 
             logger.Info($"Departure PTM Service Initialisation Starting ({Parameters.VERSION})");
@@ -71,7 +75,7 @@ namespace AUH_PTM_Widget
         }
 
         // Start the thread to listen to incoming update notifications
-        public bool StartMQListener()
+        private bool StartMQListener()
         {
 
             try
@@ -118,8 +122,7 @@ namespace AUH_PTM_Widget
                 //Put it in a Try/Catch so on bad message or reading problem dont stop the system
                 try
                 {
-
-                    using (Message msg = recvQueue.Receive(new TimeSpan(0, 0, 5)))
+                    using (Message msg = recvQueue.Receive(new TimeSpan(0, 0, Parameters.WAIT_FOR_MESSAGE_INTERVAL)))
                     {
 
                         logger.Trace("Message Received");
@@ -128,7 +131,7 @@ namespace AUH_PTM_Widget
                         {
                             xml = reader.ReadToEnd();
                         }
-                        ProcessMessageAsync(xml, RandomString(10));
+                        _ = ProcessMessageAsync(xml, GenerateMessageID(10));
                     }
                 }
                 catch (MessageQueueException e)
@@ -149,14 +152,14 @@ namespace AUH_PTM_Widget
                 {
                     logger.Error("Error in Recieving and Processing Notification Message");
                     logger.Error(e.Message);
-                    Thread.Sleep(Parameters.RESTSERVER_RETRY_INTERVAL);
+                    Thread.Sleep(Parameters.LISTENQUEUE_RETRY_INTERVAL);
                 }
             }
             logger.Info("Queue Listener Stopped");
             receiveThread.Abort();
         }
 
-        public async void ProcessMessageAsync(string xml, string id)
+        private async Task ProcessMessageAsync(string xml, string id)
         {
 
             logger.Info($"Processing Message  {id}");
@@ -177,7 +180,7 @@ namespace AUH_PTM_Widget
                     XmlDocument doc = new XmlDocument();
                     doc.LoadXml(xml);
                     XmlNode xmlRoot = doc.DocumentElement;
-                    Tuple<bool, FlightNode, XmlNode> tuple = arrivalClassifier.Classify(xmlRoot);
+                    Tuple<bool, FlightNode, XmlNode> tuple = arrivalClassifier.ClassifyFlightAndGetTransferChanges(xmlRoot);
 
                     // Item1 - bool. True if the flight is an arrival
                     // Item2 - FlightNode. Arrival Flight
@@ -192,7 +195,7 @@ namespace AUH_PTM_Widget
                     logger.Info($"Processing Arrival Flight {tuple.Item2.flightKey}");
 
                     // Get a list for each of the additions, updates and deletions.
-                    Tuple<List<PTMRow>, List<PTMRow>, List<PTMRow>> crud = arrivalClassifier.ClassifyEntries(tuple.Item3);
+                    Tuple<List<PTMRow>, List<PTMRow>, List<PTMRow>> crud = arrivalClassifier.ClassifyTransferChanges(tuple.Item3);
 
                     // Item1 - List<PTMRow>. Additional PTMS
                     // Item2 - List<PTMRow>. Update PTMS
@@ -298,11 +301,16 @@ namespace AUH_PTM_Widget
             logger.Trace("<<<<<<<<<----------- Processing Updates");
         }
 
-        public static string RandomString(int length)
+        private string GenerateMessageID(int length)
         {
             const string chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
             return new string(Enumerable.Repeat(chars, length)
               .Select(s => s[random.Next(s.Length)]).ToArray());
+        }
+
+        public void Dispose()
+        {
+            ((IDisposable)recvQueue).Dispose();
         }
     }
 }

@@ -4,20 +4,20 @@ using System.Xml;
 
 //Version RC 3.7
 
-namespace AUH_PTM_Widget
+namespace Departure_PTM_Widget
 {
 
-    // Class for holding the flight information that is contained in the Towing message
+
     class PTMRow
     {
-        public string flightKey;
+        private readonly NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();
+
         public Dictionary<string, string> valueMap = new Dictionary<string, string>();
-        private static readonly NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();
 
         public string airline;
         public string flight;
         public string sto;
-
+        public string flightKey;
 
         public PTMRow(XmlNode node)
         {

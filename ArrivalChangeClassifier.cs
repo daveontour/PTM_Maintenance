@@ -2,15 +2,15 @@
 using System.Collections.Generic;
 using System.Xml;
 
-namespace AUH_PTM_Widget
+namespace Departure_PTM_Widget
 {
     class ArrivalChangeClassifier
     {
 
-        static readonly NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();
+        private readonly NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();
         public ArrivalChangeClassifier() { }
 
-        public Tuple<bool, FlightNode, XmlNode> Classify(XmlNode xmlRoot)
+        public Tuple<bool, FlightNode, XmlNode> ClassifyFlightAndGetTransferChanges(XmlNode xmlRoot)
         {
 
             /*
@@ -58,7 +58,7 @@ namespace AUH_PTM_Widget
             return new Tuple<bool, FlightNode, XmlNode>(true, flight, transferChanges);
         }
 
-        internal Tuple<List<PTMRow>, List<PTMRow>, List<PTMRow>> ClassifyEntries(XmlNode transferChanges)
+        public Tuple<List<PTMRow>, List<PTMRow>, List<PTMRow>> ClassifyTransferChanges(XmlNode transferChanges)
         {
             /* 
              * Determine the entries which are additions, updates and deletions
@@ -132,7 +132,7 @@ namespace AUH_PTM_Widget
 
             // Examine the list to create a new list of the adds, updates and deletes
             List<PTMRow> additionsList = GetAdditions(oldList, newList);
-            List<PTMRow> updateList = GetChanges(oldList, newList);
+            List<PTMRow> updateList = GeUpdates(oldList, newList);
             List<PTMRow> deleteList = GetDeletions(oldList, newList);
 
             //Print out the individual lists of logging is enabled.
@@ -164,7 +164,7 @@ namespace AUH_PTM_Widget
 
         private List<PTMRow> GetAdditions(List<PTMRow> oldList, List<PTMRow> newList)
         {
-            // Lis to hold the new entries
+            // List to hold the new entries
             List<PTMRow> additionsList = new List<PTMRow>();
 
             foreach (PTMRow newPTM in newList)
@@ -190,7 +190,7 @@ namespace AUH_PTM_Widget
 
         }
 
-        private List<PTMRow> GetChanges(List<PTMRow> oldList, List<PTMRow> newList)
+        private List<PTMRow> GeUpdates(List<PTMRow> oldList, List<PTMRow> newList)
         {
             List<PTMRow> changeList = new List<PTMRow>();
             foreach (PTMRow newPTM in newList)

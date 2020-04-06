@@ -6,13 +6,46 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Xml;
 
-namespace AUH_PTM_Widget
+namespace Departure_PTM_Widget
 {
     class FlightUpdater
     {
-        static readonly NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();
+        private readonly NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();
 
-        private string getFlightTemplate = @"<soapenv:Envelope xmlns:soapenv=""http://schemas.xmlsoap.org/soap/envelope/"" xmlns:ams6=""http://www.sita.aero/ams6-xml-api-webservice"" xmlns:wor=""http://schemas.datacontract.org/2004/07/WorkBridge.Modules.AMS.AMSIntegrationAPI.Mod.Intf.DataTypes"">
+        //        private readonly string getFlightTemplate = @"<soapenv:Envelope xmlns:soapenv=""http://schemas.xmlsoap.org/soap/envelope/"" xmlns:ams6=""http://www.sita.aero/ams6-xml-api-webservice"" xmlns:wor=""http://schemas.datacontract.org/2004/07/WorkBridge.Modules.AMS.AMSIntegrationAPI.Mod.Intf.DataTypes"">
+        //   <soapenv:Header/>
+        //   <soapenv:Body>
+        //	  <ams6:GetFlight>
+        //		 <!--Optional:-->
+        //		 <ams6:sessionToken>@token</ams6:sessionToken>
+        //		 <!--Optional:-->
+        //		 <ams6:flightId>
+        //			<wor:_hasAirportCodes>false</wor:_hasAirportCodes>
+        //			<wor:_hasFlightDesignator>true</wor:_hasFlightDesignator>
+        //			<wor:_hasScheduledTime>false</wor:_hasScheduledTime>
+        //			<wor:airlineDesignatorField>
+        //			   <!--Zero or more repetitions:-->
+        //			   <wor:LookupCode>
+        //				  <wor:codeContextField>IATA</wor:codeContextField>
+        //				  <wor:valueField>@airlineIATA</wor:valueField>
+        //			   </wor:LookupCode>
+        //			</wor:airlineDesignatorField>
+        //			<wor:airportCodeField>
+        //			   <!--Zero or more repetitions:-->
+        //			   <wor:LookupCode>
+        //				  <wor:codeContextField>IATA</wor:codeContextField>
+        //				  <wor:valueField>@airportIATA</wor:valueField>
+        //			   </wor:LookupCode>
+        //			</wor:airportCodeField>
+        //			<wor:flightKindField>@kind</wor:flightKindField>
+        //			<wor:flightNumberField>@flightNum</wor:flightNumberField>
+        //			<wor:scheduledDateField>@schedDate</wor:scheduledDateField>
+        //		 </ams6:flightId>
+        //	  </ams6:GetFlight>
+        //   </soapenv:Body>
+        //</soapenv:Envelope>";
+
+        private readonly string getFlightTemplate = @"<soapenv:Envelope xmlns:soapenv=""http://schemas.xmlsoap.org/soap/envelope/"" xmlns:ams6=""http://www.sita.aero/ams6-xml-api-webservice"" xmlns:wor=""http://schemas.datacontract.org/2004/07/WorkBridge.Modules.AMS.AMSIntegrationAPI.Mod.Intf.DataTypes"">
    <soapenv:Header/>
    <soapenv:Body>
 	  <ams6:GetFlight>
@@ -45,6 +78,53 @@ namespace AUH_PTM_Widget
    </soapenv:Body>
 </soapenv:Envelope>";
 
+        //     private readonly string updateFlightExtendedTop = @"<soapenv:Envelope xmlns:soapenv=""http://schemas.xmlsoap.org/soap/envelope/"" xmlns:ams6=""http://www.sita.aero/ams6-xml-api-webservice"" xmlns:wor=""http://schemas.datacontract.org/2004/07/WorkBridge.Modules.AMS.AMSIntegrationAPI.Mod.Intf.DataTypes"">
+        //<soapenv:Header/>
+        //<soapenv:Body>
+        //<ams6:UpdateFlightExtended>
+        //<!--Optional:-->
+        //<ams6:sessionToken>@token</ams6:sessionToken>
+        //<!--Optional:-->
+        //<ams6:flightIdentifier>
+        //<wor:_hasAirportCodes>true</wor:_hasAirportCodes>
+        //<wor:_hasFlightDesignator>true</wor:_hasFlightDesignator>
+        //<wor:_hasScheduledTime>true</wor:_hasScheduledTime>
+        //<wor:airlineDesignatorField>
+        //   <!--Zero or more repetitions:-->
+        //   <wor:LookupCode>
+        //	  <wor:codeContextField>IATA</wor:codeContextField>
+        //	  <wor:valueField>@iataAirline</wor:valueField>
+        //   </wor:LookupCode>
+        //   <wor:LookupCode>
+        //	  <wor:codeContextField>ICAO</wor:codeContextField>
+        //	  <wor:valueField>@icaoAirline</wor:valueField>
+        //   </wor:LookupCode>
+        //</wor:airlineDesignatorField>
+        //<wor:airportCodeField>
+        //   <!--Zero or more repetitions:-->
+        //   <wor:LookupCode>
+        //	  <wor:codeContextField>IATA</wor:codeContextField>
+        //	  <wor:valueField>@iataAirport</wor:valueField>
+        //   </wor:LookupCode>
+        //   <wor:LookupCode>
+        //	  <wor:codeContextField>ICAO</wor:codeContextField>
+        //	  <wor:valueField>@icaoAirport</wor:valueField>
+        //   </wor:LookupCode>
+        //</wor:airportCodeField>
+        //<wor:flightKindField>Departure</wor:flightKindField>
+        //<wor:flightNumberField>@fltNum</wor:flightNumberField>
+        //<wor:scheduledDateField>@sto</wor:scheduledDateField>
+        //</ams6:flightIdentifier>
+        //<!--Optional:-->
+        //<ams6:updates>
+        //<wor:activityUpdateField/>
+        // <wor:eventUpdateField/>
+        //<wor:tableValueUpdateField>
+        //   <!--Zero or more repetitions:-->
+        //   <wor:TableValueUpdate>
+        //	  <wor:propertyNameField>Tl--_TransferLoads</wor:propertyNameField>
+        //	  <wor:rowField>";
+
         private readonly string updateFlightExtendedTop = @"<soapenv:Envelope xmlns:soapenv=""http://schemas.xmlsoap.org/soap/envelope/"" xmlns:ams6=""http://www.sita.aero/ams6-xml-api-webservice"" xmlns:wor=""http://schemas.datacontract.org/2004/07/WorkBridge.Modules.AMS.AMSIntegrationAPI.Mod.Intf.DataTypes"">
    <soapenv:Header/>
    <soapenv:Body>
@@ -62,20 +142,12 @@ namespace AUH_PTM_Widget
 				  <wor:codeContextField>IATA</wor:codeContextField>
 				  <wor:valueField>@iataAirline</wor:valueField>
 			   </wor:LookupCode>
-			   <wor:LookupCode>
-				  <wor:codeContextField>ICAO</wor:codeContextField>
-				  <wor:valueField>@icaoAirline</wor:valueField>
-			   </wor:LookupCode>
 			</wor:airlineDesignatorField>
 			<wor:airportCodeField>
 			   <!--Zero or more repetitions:-->
 			   <wor:LookupCode>
 				  <wor:codeContextField>IATA</wor:codeContextField>
 				  <wor:valueField>@iataAirport</wor:valueField>
-			   </wor:LookupCode>
-			   <wor:LookupCode>
-				  <wor:codeContextField>ICAO</wor:codeContextField>
-				  <wor:valueField>@icaoAirport</wor:valueField>
 			   </wor:LookupCode>
 			</wor:airportCodeField>
 			<wor:flightKindField>Departure</wor:flightKindField>
@@ -119,61 +191,6 @@ namespace AUH_PTM_Widget
 
         public FlightUpdater() { }
 
-        public async Task<XmlNode> GetFlight(FlightNode flt)
-        {
-            try
-            {
-                string flightQuery = getFlightTemplate.Replace("@token", Parameters.TOKEN)
-                    .Replace("@airlineIATA", flt.airlineDesignatorIATA)
-                    .Replace("@airportIATA", flt.airportCodeIATA)
-                    .Replace("@kind", flt.flightKind)
-                    .Replace("@flightNum", flt.flightNumber)
-                    .Replace("@schedDate", flt.scheduledDate);
-
-                //logger.Trace(flightQuery);
-
-                try
-                {
-                    using (var client = new HttpClient())
-                    {
-
-                        HttpRequestMessage requestMessage = new HttpRequestMessage(HttpMethod.Post, Parameters.BASE_URI)
-                        {
-                            Content = new StringContent(flightQuery, Encoding.UTF8, "text/xml")
-                        };
-                        requestMessage.Headers.Add("SOAPAction", "http://www.sita.aero/ams6-xml-api-webservice/IAMSIntegrationService/GetFlight");
-
-                        using (HttpResponseMessage response = await client.SendAsync(requestMessage))
-                        {
-                            if (response.StatusCode == HttpStatusCode.OK || response.StatusCode == HttpStatusCode.Accepted || response.StatusCode == HttpStatusCode.Created || response.StatusCode == HttpStatusCode.NoContent)
-                            {
-                                XmlDocument doc = new XmlDocument();
-                                doc.LoadXml(await response.Content.ReadAsStringAsync());
-                                XmlNode xmlRoot = doc.DocumentElement;
-
-                                return xmlRoot;
-                            }
-                            else
-                            {
-                                return null;
-                            }
-                        }
-                    }
-                }
-                catch (Exception ex)
-                {
-                    logger.Error(ex.StackTrace);
-                    return null;
-                }
-            }
-            catch (Exception e)
-            {
-                logger.Error(e.Message);
-                logger.Error(e);
-                return null;
-            }
-        }
-
         public async Task<bool> UpdateOrAddOrRemovePTMFromDepartureFlight(FlightNode arrFlight, FlightNode depFlight, PTMRow updateOrAddPTM = null)
         {
             // arrFlight - the flight node for the arriving flight
@@ -207,25 +224,35 @@ namespace AUH_PTM_Widget
             // A list for holding the PTMs we want to retain
             List<XmlNode> retainedPTMs = new List<XmlNode>();
 
-            foreach (XmlNode node in departurePTMSNodes)
+            if (departurePTMSNodes != null)
             {
-                PTMRow departurePTMEntry = new PTMRow(node);
-
-                // If the flight keys are the same, then don't add it to the list. For Updates and Addtions 
-                // the updatePTM will be passed along the chain so it is added 
-
-                if (arrFlight.flightKey != departurePTMEntry.flightKey)
+                foreach (XmlNode node in departurePTMSNodes)
                 {
-                    retainedPTMs.Add(node);
+                    PTMRow departurePTMEntry = new PTMRow(node);
+
+                    // If the flight keys are the same, then don't add it to the list. For Updates and Addtions 
+                    // the updatePTM will be passed along the chain so it is added 
+
+                    if (arrFlight.flightKey != departurePTMEntry.flightKey)
+                    {
+                        retainedPTMs.Add(node);
+                    }
                 }
             }
 
             // The updatePTM has the departure flight information in it, so We need to modify it so it has the arrival flight information in it 
             if (updateOrAddPTM != null)
             {
-                updateOrAddPTM.airline = arrFlight.airlineDesignatorIATA;
-                updateOrAddPTM.flight = arrFlight.flightNumber;
-                updateOrAddPTM.sto = arrFlight.scheduledDate;
+                updateOrAddPTM.valueMap["Sl--_AirlineIATA"] = arrFlight.airlineDesignatorIATA;
+                updateOrAddPTM.valueMap["Sl--_FlightNumber"] = arrFlight.flightNumber;
+                if (Parameters.STO_DATETIME)
+                {
+                    updateOrAddPTM.valueMap["dl--_STO"] = arrFlight.scheduledDate + "T00:00:00";
+                }
+                else
+                {
+                    updateOrAddPTM.valueMap["dl--_STO"] = arrFlight.scheduledDate;
+                }
             }
 
             _ = UpdateDeprtaureFlightPTMEntriesAsync(retainedPTMs, depFlight, updateOrAddPTM);
@@ -233,47 +260,53 @@ namespace AUH_PTM_Widget
             return true;
         }
 
-        //internal async Task<bool> AddPTMToDepartureFlight(FlightNode arrFlight, FlightNode depFlight, PTMRow additionaPTM)
-        //{
-        //    XmlNode depFlightNode = await this.GetFlight(depFlight);
-
-        //    if (depFlightNode == null || depFlightNode.OuterXml.Contains("FLIGHT_NOT_FOUND"))
-        //    {
-        //        logger.Trace($"Departure Flight Not Found: {depFlight.flightKey }");
-        //        return false;
-        //    }
-        //    else
-        //    {
-        //        logger.Trace($"Departure Flight Found: {depFlight.flightKey }");
-        //    }
-
-        //    XmlNode departurePTMSNodes = GetTransfersFromFlight(depFlightNode);
-
-        //    List<XmlNode> retainedPTMs = new List<XmlNode>();
-
-        //    if (departurePTMSNodes != null)
-        //    {
-        //        foreach (XmlNode node in departurePTMSNodes)
-        //        {
-        //            retainedPTMs.Add(node);
-        //        }
-        //    }
-
-        //    // The additional PTM has the departure flight information in it, so We need to modify it so it has the arrival flight information in it 
-        //    if (additionaPTM != null)
-        //    {
-        //        additionaPTM.airline = arrFlight.airlineDesignatorIATA;
-        //        additionaPTM.flight = arrFlight.flightNumber;
-        //        additionaPTM.sto = arrFlight.scheduledDate;
-        //    }
-
-        //    _ = UpdateDeprtaureFlightPTMEntriesAsync(retainedPTMs, depFlight, additionaPTM);
-
-        //    return true;
-
-        //}
-
         private async Task UpdateDeprtaureFlightPTMEntriesAsync(List<XmlNode> retainedPTMs, FlightNode depFlight, PTMRow ptm)
+        {
+            string soapUpdateMessage = this.ConstructSOAPMessage(retainedPTMs, depFlight, ptm);
+
+
+            // Send the message via the AMS WebServices endpoint
+            try
+            {
+                logger.Info($"Updating Departure Flight {depFlight.flightKey}");
+                using (var client = new HttpClient())
+                {
+
+                    HttpRequestMessage requestMessage = new HttpRequestMessage(HttpMethod.Post, Parameters.BASE_URI)
+                    {
+                        Content = new StringContent(soapUpdateMessage, Encoding.UTF8, "text/xml")
+                    };
+                    requestMessage.Headers.Add("SOAPAction", "http://www.sita.aero/ams6-xml-api-webservice/IAMSIntegrationService/UpdateFlightExtended");
+
+                    using (HttpResponseMessage response = await client.SendAsync(requestMessage))
+                    {
+                        if (response.StatusCode == HttpStatusCode.OK || response.StatusCode == HttpStatusCode.Accepted || response.StatusCode == HttpStatusCode.Created || response.StatusCode == HttpStatusCode.NoContent)
+                        {
+                            logger.Trace($"Update of departure Flight Succeeded OK. Departure Flight {depFlight.flightKey} ");
+                            _ = ProcessResponse(response);
+                            return;
+                        }
+                        else
+                        {
+                            logger.Error("Error Updating Departure Flight");
+                            logger.Error(response.StatusCode);
+                            if (logger.IsTraceEnabled)
+                            {
+                                _ = ProcessErrorResponse(response);
+                            }
+                            return;
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                logger.Error(ex.StackTrace);
+                return;
+            }
+        }
+
+        private string ConstructSOAPMessage(List<XmlNode> retainedPTMs, FlightNode depFlight, PTMRow ptm)
         {
 
             // The top part of the message which includes the departing flight info
@@ -281,7 +314,8 @@ namespace AUH_PTM_Widget
                 .Replace("@token", Parameters.TOKEN)
                 .Replace("@iataAirline", depFlight.airlineDesignatorIATA)
                 .Replace("@icaoAirline", depFlight.airlineDesignatorICAO)
-                .Replace("@iataAirport", depFlight.airportCodeIATA)
+                //                .Replace("@iataAirport", depFlight.airportCodeIATA)
+                .Replace("@iataAirport", Parameters.HOME_AIRPORT_IATA)
                 .Replace("@icaoAirport", depFlight.airportCodeICAO)
                 .Replace("@fltNum", depFlight.flightNumber)
                 .Replace("@sto", depFlight.scheduledDate);
@@ -331,49 +365,68 @@ namespace AUH_PTM_Widget
                 logger.Trace(soapUpdateMessage);
             }
 
+            logger.Trace(soapUpdateMessage);
 
-            // Send the message via the AMS WebServices endpoint
+            return soapUpdateMessage;
+        }
+
+        private async Task<XmlNode> GetFlight(FlightNode flt)
+        {
             try
             {
-                logger.Info($"Updating Departure Flight {depFlight.flightKey}");
-                using (var client = new HttpClient())
+                string flightQuery = getFlightTemplate.Replace("@token", Parameters.TOKEN)
+                    .Replace("@airlineIATA", flt.airlineDesignatorIATA)
+                    //                   .Replace("@airportIATA", flt.airportCodeIATA)
+                    .Replace("@airportIATA", Parameters.HOME_AIRPORT_IATA)
+                    .Replace("@kind", flt.flightKind)
+                    .Replace("@flightNum", flt.flightNumber)
+                    .Replace("@schedDate", flt.scheduledDate);
+
+                //logger.Trace(flightQuery);
+
+                try
                 {
-
-                    HttpRequestMessage requestMessage = new HttpRequestMessage(HttpMethod.Post, Parameters.BASE_URI)
+                    using (var client = new HttpClient())
                     {
-                        Content = new StringContent(soapUpdateMessage, Encoding.UTF8, "text/xml")
-                    };
-                    requestMessage.Headers.Add("SOAPAction", "http://www.sita.aero/ams6-xml-api-webservice/IAMSIntegrationService/UpdateFlightExtended");
 
-                    using (HttpResponseMessage response = await client.SendAsync(requestMessage))
-                    {
-                        if (response.StatusCode == HttpStatusCode.OK || response.StatusCode == HttpStatusCode.Accepted || response.StatusCode == HttpStatusCode.Created || response.StatusCode == HttpStatusCode.NoContent)
+                        HttpRequestMessage requestMessage = new HttpRequestMessage(HttpMethod.Post, Parameters.BASE_URI)
                         {
-                            logger.Trace($"Update of departure Flight Succeeded OK. Departure Flight {depFlight.flightKey} ");
-                            _ = ProcessResponse(response);
-                            return;
-                        }
-                        else
+                            Content = new StringContent(flightQuery, Encoding.UTF8, "text/xml")
+                        };
+                        requestMessage.Headers.Add("SOAPAction", "http://www.sita.aero/ams6-xml-api-webservice/IAMSIntegrationService/GetFlight");
+
+                        using (HttpResponseMessage response = await client.SendAsync(requestMessage))
                         {
-                            logger.Error("Error Updating Departure Flight");
-                            logger.Error(response.StatusCode);
-                            if (logger.IsTraceEnabled)
+                            if (response.StatusCode == HttpStatusCode.OK || response.StatusCode == HttpStatusCode.Accepted || response.StatusCode == HttpStatusCode.Created || response.StatusCode == HttpStatusCode.NoContent)
                             {
-                                _ = ProcessErrorResponse(response);
+                                XmlDocument doc = new XmlDocument();
+                                doc.LoadXml(await response.Content.ReadAsStringAsync());
+                                XmlNode xmlRoot = doc.DocumentElement;
+
+                                return xmlRoot;
                             }
-                            return;
+                            else
+                            {
+                                return null;
+                            }
                         }
                     }
                 }
+                catch (Exception ex)
+                {
+                    logger.Error(ex.StackTrace);
+                    return null;
+                }
             }
-            catch (Exception ex)
+            catch (Exception e)
             {
-                logger.Error(ex.StackTrace);
-                return;
+                logger.Error(e.Message);
+                logger.Error(e);
+                return null;
             }
         }
 
-        public XmlNode GetTransfersFromFlight(XmlNode flight)
+        private XmlNode GetTransfersFromFlight(XmlNode flight)
         {
             XmlNamespaceManager nsmgr = new XmlNamespaceManager(flight.OwnerDocument.NameTable);
             nsmgr.AddNamespace("ams", "http://www.sita.aero/ams6-xml-api-datatypes");
@@ -392,7 +445,7 @@ namespace AUH_PTM_Widget
             }
         }
 
-        public async Task ProcessResponse(HttpResponseMessage response)
+        private async Task ProcessResponse(HttpResponseMessage response)
         {
 
             try
@@ -411,7 +464,7 @@ namespace AUH_PTM_Widget
             }
         }
 
-        public async Task ProcessErrorResponse(HttpResponseMessage response)
+        private async Task ProcessErrorResponse(HttpResponseMessage response)
         {
 
             try

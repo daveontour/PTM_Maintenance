@@ -6,7 +6,7 @@
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ProjectGuid>{0AA10018-B5ED-4246-8A38-A191EC969083}</ProjectGuid>
     <OutputType>Exe</OutputType>
-    <RootNamespace>AUH_PTM_Widget</RootNamespace>
+    <RootNamespace>Departure_PTM_Widget</RootNamespace>
     <AssemblyName>DepartureFlightPTM</AssemblyName>
     <TargetFrameworkVersion>v4.5.2</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
