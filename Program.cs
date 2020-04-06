@@ -4,6 +4,8 @@ using System.Configuration;
 using System.Messaging;
 using Topshelf;
 
+//Release Candidate 1.0
+
 namespace Departure_PTM_Widget
 {
     class Program

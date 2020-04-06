@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Xml;
 
-//Version RC 3.7
+//Release Candidate 1.0
 
 namespace Departure_PTM_Widget
 {

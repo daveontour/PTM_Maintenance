@@ -6,6 +6,8 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Xml;
 
+//Release Candidate 1.0
+
 namespace Departure_PTM_Widget
 {
     class FlightUpdater

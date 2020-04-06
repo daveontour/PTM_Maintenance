@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using System.Xml;
 
+//Release Candidate 1.0
+
 namespace Departure_PTM_Widget
 {
     class ArrivalChangeClassifier
