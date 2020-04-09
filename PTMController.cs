@@ -4,7 +4,6 @@ using System.IO;
 using System.Linq;
 using System.Messaging;
 using System.Threading;
-using System.Threading.Tasks;
 using System.Xml;
 
 //Release Candidate 2.0
@@ -134,7 +133,8 @@ namespace Departure_PTM_Widget
                         {
                             xml = reader.ReadToEnd();
                         }
-                        _ = ProcessMessageAsync(xml, GenerateMessageID(10));
+
+                        ProcessMessageAsync(xml, GenerateMessageID(10));
                     }
                 }
                 catch (MessageQueueException e)
@@ -162,7 +162,7 @@ namespace Departure_PTM_Widget
             receiveThread.Abort();
         }
 
-        private async Task ProcessMessageAsync(string xml, string id)
+        private void ProcessMessageAsync(string xml, string id)
         {
 
             logger.Info($"Processing Message  {id}");
@@ -213,9 +213,9 @@ namespace Departure_PTM_Widget
                     {
                         // Process the added, updated and deleted PTM entries
 
-                        if (Parameters.PROCESS_ADDS && crud.Item1.Count > 0) await ProcessAdditionsAsync(tuple.Item2, crud.Item1);
-                        if (Parameters.PROCESS_UPDATES && crud.Item2.Count > 0) await ProcessUpdatesAsync(tuple.Item2, crud.Item2);
-                        if (Parameters.PROCESS_DELETES && crud.Item3.Count > 0) await ProcessDeletesAsync(tuple.Item2, crud.Item3);
+                        if (Parameters.PROCESS_ADDS && crud.Item1.Count > 0) ProcessAdditionsAsync(tuple.Item2, crud.Item1);
+                        if (Parameters.PROCESS_UPDATES && crud.Item2.Count > 0) ProcessUpdatesAsync(tuple.Item2, crud.Item2);
+                        if (Parameters.PROCESS_DELETES && crud.Item3.Count > 0) ProcessDeletesAsync(tuple.Item2, crud.Item3);
 
 
                     }
@@ -239,7 +239,7 @@ namespace Departure_PTM_Widget
             }
         }
 
-        private async Task ProcessDeletesAsync(FlightNode arrFlight, List<PTMRow> deleteList)
+        private void ProcessDeletesAsync(FlightNode arrFlight, List<PTMRow> deleteList)
         {
 
             logger.Trace(">>>>>>----------- Processing Deletes");
@@ -247,7 +247,7 @@ namespace Departure_PTM_Widget
 
             foreach (PTMRow ptm in deleteList)
             {
-                bool result = await flightUpdater.UpdateOrAddOrRemovePTMFromDepartureFlight(arrFlight, new FlightNode(ptm, "Departure", arrFlight.airportCodeIATA), null);
+                bool result = flightUpdater.UpdateOrAddOrRemovePTMFromDepartureFlight(arrFlight, new FlightNode(ptm, "Departure", arrFlight.airportCodeIATA), null);
                 if (result)
                 {
                     logger.Trace($"PTM Record Removed Sucess {arrFlight.ToString()}, {ptm.flightKey}");
@@ -261,14 +261,14 @@ namespace Departure_PTM_Widget
             logger.Trace("<<<<<<<<<----------- Processing Deletes");
         }
 
-        private async Task ProcessAdditionsAsync(FlightNode arrFlight, List<PTMRow> additionsList)
+        private void ProcessAdditionsAsync(FlightNode arrFlight, List<PTMRow> additionsList)
         {
             logger.Trace(">>>>>>----------- Processing Additions");
             logger.Info($"Processing additions for arrival flight {arrFlight.flightKey}");
 
             foreach (PTMRow ptm in additionsList)
             {
-                bool result = await flightUpdater.UpdateOrAddOrRemovePTMFromDepartureFlight(arrFlight, new FlightNode(ptm, "Departure", arrFlight.airportCodeIATA), ptm);
+                bool result = flightUpdater.UpdateOrAddOrRemovePTMFromDepartureFlight(arrFlight, new FlightNode(ptm, "Departure", arrFlight.airportCodeIATA), ptm);
                 if (result)
                 {
                     logger.Trace($"PTM Record Addition Sucess {arrFlight.ToString()}, {ptm.flightKey}");
@@ -282,7 +282,7 @@ namespace Departure_PTM_Widget
             logger.Trace("<<<<<<<----------- Processing Additions");
         }
 
-        private async Task ProcessUpdatesAsync(FlightNode arrFlight, List<PTMRow> updateList)
+        private void ProcessUpdatesAsync(FlightNode arrFlight, List<PTMRow> updateList)
         {
 
             logger.Trace(">>>>>>----------- Processing Updates");
@@ -290,7 +290,7 @@ namespace Departure_PTM_Widget
 
             foreach (PTMRow ptm in updateList)
             {
-                bool result = await flightUpdater.UpdateOrAddOrRemovePTMFromDepartureFlight(arrFlight, new FlightNode(ptm, "Departure", arrFlight.airportCodeIATA), ptm);
+                bool result = flightUpdater.UpdateOrAddOrRemovePTMFromDepartureFlight(arrFlight, new FlightNode(ptm, "Departure", arrFlight.airportCodeIATA), ptm);
                 if (result)
                 {
                     logger.Trace($"PTM Record Uppdate Sucess {arrFlight.ToString()}, {ptm.flightKey}");

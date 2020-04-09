@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Configuration;
 
-//Version RC 1.0
+//Version RC 2.0
 
 namespace Departure_PTM_Widget
 {
@@ -27,7 +27,7 @@ namespace Departure_PTM_Widget
         internal static int MIN_SEPERATION = 10;
         internal static int DISPATCHER_LOOP_INTERVAL = 1000;
 
-        internal static string VERSION = "Version RC 1.0, 20200404";
+        internal static string VERSION = "Version RC 2.0, 20200404";
         internal static bool DEEPTRACE;
 
         internal static bool PROCESS_ADDS;

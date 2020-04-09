@@ -179,73 +179,12 @@ namespace Departure_PTM_Widget
             logger.Info("Dispatcher Stopped");
 
         }
-        public async Task<bool> UpdateOrAddOrRemovePTMFromDepartureFlight(FlightNode arrFlight, FlightNode depFlight, PTMRow updateOrAddPTM = null)
+        public bool UpdateOrAddOrRemovePTMFromDepartureFlight(FlightNode arrFlight, FlightNode depFlight, PTMRow updateOrAddPTM = null)
         {
-            // arrFlight - the flight node for the arriving flight
-            // ptm - the PTM record that has to be removed from a departure flight
-
-            //XmlNode depFlightNode = await this.GetFlight(depFlight);
-
-            //if (depFlightNode == null || depFlightNode.OuterXml.Contains("FLIGHT_NOT_FOUND"))
-            //{
-            //    logger.Trace($"Departure Flight Not Found: {depFlight.flightKey }");
-            //    return false;
-            //}
-            //else
-            //{
-            //    logger.Trace($"Departure Flight Found: {depFlight.flightKey }");
-            //}
-
-            //XmlNode departurePTMSNodes = GetTransfersFromFlight(depFlightNode);
-
-            //if (departurePTMSNodes == null)
-            //{
-            //    logger.Trace($"No PTM Entries were found in departure flight: {depFlight.flightKey }");
-
-            //    //If this was only a delete, then we can return now
-            //    if (updateOrAddPTM == null)
-            //    {
-            //        return true;
-            //    }
-            //}
-
-            //// A list for holding the PTMs we want to retain
-            //List<XmlNode> retainedPTMs = new List<XmlNode>();
-
-            //if (departurePTMSNodes != null)
-            //{
-            //    foreach (XmlNode node in departurePTMSNodes)
-            //    {
-            //        PTMRow departurePTMEntry = new PTMRow(node);
-
-            //        // If the flight keys are the same, then don't add it to the list. For Updates and Addtions 
-            //        // the updatePTM will be passed along the chain so it is added 
-
-            //        if (arrFlight.flightKey != departurePTMEntry.flightKey)
-            //        {
-            //            retainedPTMs.Add(node);
-            //        }
-            //    }
-            //}
-
-            //// The updatePTM has the departure flight information in it, so We need to modify it so it has the arrival flight information in it 
-            //if (updateOrAddPTM != null)
-            //{
-            //    updateOrAddPTM.valueMap["Sl--_AirlineIATA"] = arrFlight.airlineDesignatorIATA;
-            //    updateOrAddPTM.valueMap["Sl--_FlightNumber"] = arrFlight.flightNumber;
-            //    if (Parameters.STO_DATETIME)
-            //    {
-            //        updateOrAddPTM.valueMap["dl--_STO"] = arrFlight.scheduledDate + "T00:00:00";
-            //    }
-            //    else
-            //    {
-            //        updateOrAddPTM.valueMap["dl--_STO"] = arrFlight.scheduledDate;
-            //    }
-            //}
 
             _dispatcherList.Add(new Tuple<FlightNode, FlightNode, PTMRow>(arrFlight, depFlight, updateOrAddPTM));
 
-            // _ = UpdateDeprtaureFlightPTMEntriesAsync(retainedPTMs, depFlight, updateOrAddPTM);
+
 
             return true;
         }
